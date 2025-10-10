@@ -1,0 +1,44 @@
+\documentclass[11pt,a4 paper,one side]{article}
+\usepackage{amsmath,amssymb,graphicx}
+\usepackage{ctex}  
+\usepackage[colorlinks=true,linkcolor=red,citecolor=red,filecolor=magenta,urlcolor=cyan]{hyperref}
+\usepackage{bookmark}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\usepackage{xcolor}
+\usepackage{geometry}
+\geometry{a4paper, left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+\title{偏微分方程数值解+第一次上机作业}
+\author{2100012131 蒋鹏}
+\date{\today}
+\begin{document}
+\maketitle
+\tableofcontents
+\section{问题描述}
+实现稀疏矩阵的CSR存储格式(Compressed Sparse Row),需要实现的核心功能包括：
+\par 1.该存储格式的主要元素，包括：非零元个数，矩阵行列，非零元行列索引以及元素值
+\par 2.构造稀疏矩阵（可以以2维Dirichlet边界Poisson方程系数矩阵为例）
+\par 3.基本操作：矩阵向量乘法，取矩阵上，下三角部分，取对角线部分（服务于迭代Jacobi等线性方程组求解方法）
+\par 另外我们自己设计了一些其他功能：输出稀疏矩阵的matrix form，修改某指定位置的元素（不改变非零元位置）。
+\section{算法设计}
+\subsection{CSR存储格式}
+首先存储稀疏矩阵的基本信息，包括矩阵的行数$row$，列数$col$以及非零元的个数$num$。然后，
+我们采取三元组法来存储稀疏矩阵，即用三个一维数组来分别存储非零元的值、列索引以及行指针。具体来说，我们定义以下三个数组：
+\par 1.值数组$values$：存储矩阵中所有非零元的值，长度为$num$。
+\par 2.列索引数组$col\_idx$：存储每个非零元所在的列索引，长度为$num$。
+\par 3.行指针数组$row\_ptr$：存储当前行的第一个非零元在值数组中的位置，长度为$row+1$。其中，$row\_ptr[i]$表示第$i$行的第一个非零元在$values$数组中的位置，
+于是$row\_ptr[i]-row\_ptr[i-1]$即为第$i$行的非零元个数。（$1\leq i \leq row$）
+\subsection{Laplacian矩阵构造}
+对于二维Dirichlet边界Poisson方程，我们使用五点差分格式来离散化该方程，从而得到一个稀疏矩阵。假设我们在一个$(n+2) \times (n+2)$的网格上进行离散化，
+需要求解的内部节点为$n \times n$个，因此矩阵的大小为$n^2 \times n^2$。每个内部节点与其上下左右四个邻居节点相连，进行naive的扫描构造矩阵，注意特殊点的处理即可。
+\subsection{矩阵向量乘法}
+矩阵向量乘法的实现比较简单，我们只需要遍历每一行的非零元，然后将对应的值与向量中的元素相乘并累加即可。具体来说，对于第$i$行($0\leq i \leq row-1$)，我们从$row\_ptr[i]$到$row\_ptr[i+1]-1$遍历所有非零元，
+然后将这些非零元与向量中的对应元素相乘并累加，最终得到结果向量的第$i$个元素。
+\subsection{取矩阵的上、下三角、对角部分}
+取矩阵的上、下三角以及对角部分的实现也比较简单。以上三角矩阵为例，我们只需要遍历每一行的非零元，然后将列索引大于行索引的非零元保留下来即可。于是我们完成了分解：A=L+U+D，这将服务于设计迭代法。
+\section{数值实验}
+首先测试CSR格式的读取、存储、输出,顺便验证矩阵向量乘法功能以及取上三角、下三角、对角部分。
+测试输入为文件SpM\_input.txt，向量$x$为全1向量。
+\par 其次测试Laplacian矩阵的构造功能，测试数据为n=5。
+\par 数值结果见output.txt。
+\end{document}
