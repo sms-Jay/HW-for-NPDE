@@ -7,7 +7,7 @@
 #include <chrono>
 using namespace std;
 // 本次上机作业的目标是实现求解非张量积形式的区域上的Poisson方程，赋予混合边界条件:alpha u + beta <grad u,n>=g
-class Poisson{
+class Poisson_SOR{
     private:
         double h;
         int N;
@@ -17,7 +17,7 @@ class Poisson{
         vector<vector<double>> u;//二维不规则数组存储数值解,采取自左下到右上的自然扫描顺序，包括边界与角点
         vector<int> j_num;//存储各个列数
     public:
-        Poisson(double size):h(size){
+        Poisson_SOR(double size):h(size){
             N=1.0/h;
             // 初始化
             j_num.resize(4*N+1,0);
@@ -162,7 +162,7 @@ class Poisson{
 };
 int main(){
     double h=1e-1;
-    Poisson P=Poisson(h);
+    Poisson_SOR P=Poisson_SOR(h);
     P.SOR(1e9,1e-8);
     auto u=P.getu();
     P.print();
