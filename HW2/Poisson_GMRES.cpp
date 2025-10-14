@@ -8,6 +8,7 @@ class Poisson_GMRES{
     private:
         double h;
         double h2;
+        double residual;
         // m-step GMRES
         int m;
         int n;
@@ -22,6 +23,7 @@ class Poisson_GMRES{
         Poisson_GMRES(double size, int m_num):h(size), m(m_num){
             h2 = h*h;
             n = 1.0/h;
+            residual = 0.0;
             // initialize
             j_num.resize(4*n+1,0);
             N = 6*n+1;
@@ -35,6 +37,7 @@ class Poisson_GMRES{
             }
             u.resize(N,0.0);
         };
+
         // functions in equation
         
         //source term
@@ -43,10 +46,10 @@ class Poisson_GMRES{
         };
         //Robin-condition
         double alpha(double x, double y){
-            return 2;
+            return 1;
         };
         double beta(double x, double y){
-            return 1;
+            return 0;
         };
         double g(double x, double y){
             return 1;
@@ -82,9 +85,19 @@ class Poisson_GMRES{
         }
         // solve the least square problem:argmin\|Hy-d\|_2; where H is an upper-Hessenberg matrix
         // Since H is an upper-Hessenberg matirx, we can use Givens-transform to archieve QR-decomposition 
-        vector<double> LS(vector<double>& d, vector<vector<double>>& H, double residual){
+        vector<double> LS(vector<double>& d, vector<vector<double>>& H){
             // Let H =(l+1)*l, l <= m
-            int l = H[0].size();
+            // Notice: H is not naturally set!
+            int l = H.size();
+            vector<vector<double>> H_t;
+            H_t.resize(l+1);
+            for(int i = 0;i <= l;i++){
+                H_t[i].resize(l);
+                for(int j = max(0,i-1);j <= l-1;j++){
+                    H_t[i][j] = H[j][i];
+                }
+            }
+            H = H_t;
             for(int i = 0;i <= l-2;i++){
                 if(fabs(H[i+1][i]) < 1e-10) continue;
                 double t = sqrt(H[i+1][i]*H[i+1][i]+H[i][i]*H[i][i]);
@@ -127,6 +140,7 @@ class Poisson_GMRES{
         // Arnoldi iteration to generate V and H
         vector<vector<double>> Arnoldi(const vector<double>& r0, const double epsilon){
             vector<vector<double>> H;
+            V.clear();
             int k = 0;
             double r_norm = sqrt(vec_dot(r0,r0));
             auto v = num_vec(1.0/r_norm,r0);
@@ -151,6 +165,7 @@ class Poisson_GMRES{
                 }
                 v = num_vec(1.0/v_norm,v_new);
                 V.push_back(v);
+                k++;
             }
             return H;
         }
@@ -226,24 +241,108 @@ class Poisson_GMRES{
             }
             return b;
         }
-        vector<double> Ax(const vector<double>& x){
+        vector<double> Ax(const vector<double>& v){
             int idx = 0;
             vector<double> z(N,0.0);
+            
+            double x = 0.0;
+            double y = 0.0;
             for(int i = 0;i <= 4*n;i++){
                 int J = j_num[i];
                 for(int j = 0;j <= J;j++){
                     if(i == 0){
-                        
+                        y = -2;
+                        x = j*h;
+                        if(j <= J-1){
+                            z[idx] = alpha(x,y)*v[idx]+beta(x,y)*(v[idx]-v[idx+J+1])/h;
+                        }
+                        else{
+                            z[idx] = alpha(x,y)*v[idx]+beta(x,y)*A*(v[idx]-v[idx-1]+v[idx+J]-v[idx-1])/h;
+                        }
                     }
+                    else if(i >= 1 && i <= n){
+                        y = -2+i*h;
+                        x = j*h;
+                        if(j == 0){
+                            z[idx] = alpha(x,y)*v[idx]+beta(x,y)*(v[idx]-v[idx+1])/h;
+                        }
+                        else if(j == J){
+                            z[idx] = alpha(x,y)*v[idx]+beta(x,y)*A*(2*v[idx]-v[idx-1]-v[idx-J-2])/h;
+                        }
+                        else{
+                            z[idx] = (4*v[idx]-v[idx-1]-v[idx+1]-v[idx+J+1]-v[idx-J-2])/h2;
+                        }
+                    }
+                    else if(i >= n+1 && i <= 3*n-1){
+                        if(j == 0){
+                            x = 0;
+                            y =-2+i*h;
+                            z[idx] = alpha(x,y)*v[idx]+beta(x,y)*(v[idx]-v[idx+1])/h;
+                        }
+                        else if(j == J){
+                            if((i % n) == 0){
+                                x = j*h;
+                                y = -2+i*h;
+                            }
+                            else{
+                                x = (j+0.4)*h;
+                                y = -2+(i-0.2)*h;
+                            }
+                            z[idx] = alpha(x,y)*v[idx]+beta(x,y)*B*(3*v[idx]-2*v[idx-1]-v[idx+J+1])/h;
+                        }
+                        else{
+                            if((i % n) == 0){
+                                z[idx] = (4*v[idx]-v[idx-1]-v[idx+1]-v[idx+1+J]-v[idx-J])/h2;
+                            }
+                            else{
+                                z[idx] = (4*v[idx]-v[idx-1]-v[idx+1]-v[idx+1+J]-v[idx-J-1])/h2;
+                            }
+                        }
+                    }
+                    else if(i == 3*n){
+                        y = 1;
+                        if(j == 0){
+                            x = 0;
+                            z[idx] = alpha(x,y)*v[idx]+beta(x,y)*(v[idx]-v[idx+1])/h;
+                        }
+                        else if(j == J){
+                            x = 2;
+                            z[idx] = alpha(x,y)*v[idx]+beta(x,y)*A*(v[idx]-v[idx-1]+v[idx-1+J]-v[idx-1])/h;
+                        }
+                        else{
+                            x = j*h;
+                            z[idx] = (4*v[idx]-v[idx-1]+v[idx+1]-v[idx-J]-v[idx+J])/h2;
+                        }
+                    }
+                    else if(i >= 3*n+1 && i<4*n){
+                        y = -2+i*h;
+                        x = y-1+j*h;
+                        if(j == 0){
+                            z[idx] = alpha(x,y)*v[idx]+beta(x,y)*A*(v[idx]-v[idx+1]+v[idx]-v[idx-J-2])/h;
+                        }
+                        else if(j == J){
+                            z[idx] = alpha(x,y)*v[idx]+beta(x,y)*A*(v[idx]-v[idx-1]+v[idx]-v[idx-J-2])/h;
+                        }
+                        else{
+                            z[idx] = (4*v[idx]-v[idx-1]-v[idx+1]-v[idx+J]-v[idx-J-2])/h2;
+                        }
+                    }
+                    else{
+                        x = 1;
+                        y = 2;
+                        z[idx] = alpha(x,y)*v[idx]+beta(x,y)*A*(v[idx]-v[idx-J-2]+v[idx-J-3]-v[idx-J-2])/h;
+                    }
+                    idx++;
                 }
             }
+            return z;
         }
         vector<double> Vy(const vector<vector<double>>& V, const vector<double>& y){
             int l = y.size();
-            vector<double> z(l,0.0);
+            vector<double> z(N,0.0);
             for(int i = 0;i < N;i++){
                 for(int j = 0;j < l;j++){
-                    z[i] += V[i][j]*y[j];
+                    z[i] += V[j][i]*y[j];
                 }
             }
             return z;
@@ -251,22 +350,49 @@ class Poisson_GMRES{
         //GMRES(m)
         vector<double> GMRES(vector<double>& x0, const double epsilon){
             auto b = RHS();
-            auto r0 = vec_subtract(b,Ax(x0));
-            auto H = Arnoldi(r0,epsilon);
-            int l = H[0].size();
-            vector<double> d(l+1,0.0);
-            double alpha = sqrt(vec_dot(r0,r0));
-            d[0] = alpha;
-            double residual = 0.0;
-            auto y = LS(d,H,residual);
-            auto Vyl = Vy(V,y);
-            auto xl = vec_add(x0,Vyl);
-            if(residual < epsilon){
-                return xl;
+            for(int k = 1;k <= 1e5;k++){
+                auto r0 = vec_subtract(b,Ax(x0));
+                auto H = Arnoldi(r0,epsilon);
+                int l = H.size();
+                vector<double> d(l+1,0.0);
+                double alpha = sqrt(vec_dot(r0,r0));
+                d[0] = alpha;
+                auto y = LS(d,H);
+                cout<<residual<<endl;
+                auto Vyl = Vy(V,y);
+                auto xl = vec_add(x0,Vyl);
+                if(residual < epsilon){
+                    u = xl;
+                    break;
+                }
+                else{
+                    x0 = xl;
+                }
             }
-            else GMRES(xl, epsilon);
+            return u;
+        }
+        void solve(){
+            vector<double> x0(N,0.0);
+            double epsilon = 1e-12;
+            auto xl = GMRES(x0,epsilon);
+        }
+        void print(){
+            int idx = N-1;
+            for(int i = 4*n;i >= 0 ;i--){
+                for(int j = 0;j <= j_num[i];j++){
+                    cout<<u[idx]<<" ";
+                    idx--;
+                }
+                cout<<endl;
+            }
         }
 };
-void main(){
-    return;
+int main(){
+    double h=1e-2;
+    int m = 5;
+    Poisson_GMRES P(h,m);
+    P.solve();
+    P.print();
+    system("pause");
+    return 0 ;
 }
