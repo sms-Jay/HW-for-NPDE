@@ -17,6 +17,7 @@ class Poisson_GMRES{
         const double A = 1.0/sqrt(2);
         const double B = 1.0/sqrt(5);
         vector<double> u;
+        vector<double> solu;
         vector<vector<double>> V;
         vector<double> j_num;
     public:
@@ -36,6 +37,18 @@ class Poisson_GMRES{
                 N += 6*n-i-1;
             }
             u.resize(N,0.0);
+            solu.resize(N,0.0);
+            int idx = 0;
+            for(int i = 0;i <= 4*n;i++){
+                for(int j = 0;j <= j_num[i];j++){
+                    double x = 0.0;
+                    double y = -2+i*h;
+                    if(i <= 3*n) x = j*h;
+                    else x = y-1+j*h;
+                    solu[idx] = real_u(x,y);
+                    idx++;
+                }
+            }
         };
 
         // functions in equation
@@ -52,9 +65,11 @@ class Poisson_GMRES{
             return 0;
         };
         double g(double x, double y){
-            return 1;
+            return x+y;
         };
-
+        double real_u(double x, double y){
+            return x+y;
+        }
 
         vector<double> vec_add(const vector<double>& a, const vector<double>& b){
             vector<double> c(N,0.0);
@@ -87,19 +102,20 @@ class Poisson_GMRES{
         // Since H is an upper-Hessenberg matirx, we can use Givens-transform to archieve QR-decomposition 
         vector<double> LS(vector<double>& d, vector<vector<double>>& H){
             // Let H =(l+1)*l, l <= m
-            // Notice: H is not naturally set!
+            // Notice: H is not naturally set!So transpose
             int l = H.size();
             vector<vector<double>> H_t;
             H_t.resize(l+1);
             for(int i = 0;i <= l;i++){
+                int it = max(0,i-1);
                 H_t[i].resize(l);
-                for(int j = max(0,i-1);j <= l-1;j++){
+                for(int j = it;j <= l-1;j++){
                     H_t[i][j] = H[j][i];
                 }
             }
             H = H_t;
             for(int i = 0;i <= l-2;i++){
-                if(fabs(H[i+1][i]) < 1e-10) continue;
+                if(fabs(H[i+1][i]) < 1e-16) continue;
                 double t = sqrt(H[i+1][i]*H[i+1][i]+H[i][i]*H[i][i]);
                 double s = H[i+1][i]/t;
                 double c = H[i][i]/t;
@@ -114,7 +130,7 @@ class Poisson_GMRES{
                 d[i] = c*a + s*b;
                 d[i+1] = c*b - s*a;
             }
-            if(fabs(H[l][l-1]) >= 1e-10){
+            if(fabs(H[l][l-1]) >= 1e-16){
                 double t = sqrt(H[l][l-1]*H[l][l-1]+H[l-1][l-1]*H[l-1][l-1]);
                 double s = H[l][l-1]/t;
                 double c = H[l-1][l-1]/t;
@@ -150,10 +166,11 @@ class Poisson_GMRES{
                 auto Av = Ax(v);
                 auto v_new = Av;
                 for(int i = 0;i <= k;i++){
-                    double hik = vec_dot(V[i],Av);
+                    auto Vi = V[i];
+                    double hik = vec_dot(Vi,Av);
                     h.push_back(hik);
                     for(int j = 0;j < N;j++){
-                        v_new[j] -= hik*V[i][j];
+                        v_new[j] -= hik*Vi[j];
                     }
                 }
                 double v_norm = sqrt(vec_dot(v_new,v_new));
@@ -184,14 +201,12 @@ class Poisson_GMRES{
                         b[idx] = g(x,y);
                     }
                     else if(i >= 1 && i <= n-1){
+                        x = j*h;
+                        y = -2+i*h;
                         if(j == 0 || j==J){
-                            x = j*h;
-                            y = -2+i*h;
                             b[idx] = g(x,y);
                         }
                         else{
-                            x = j*h;
-                            y = -2+i*h;
                             b[idx] = f(x,y);
                         }
                     }
@@ -220,16 +235,11 @@ class Poisson_GMRES{
                     }
                     else if(i >= 3*n && i <= 4*n-1){
                         y = -2+i*h;
-                        if(j == 0){
-                            x = y-1;
-                            b[idx] = g(x,y);
-                        }
-                        else if(j == J){
-                            x = 3-y;
+                        x = y-1+j*h;
+                        if(j == 0 || j == J){
                             b[idx] = g(x,y);
                         }
                         else{
-                            x = y-1+j*h;
                             b[idx] = f(x,y);
                         }
                     }
@@ -241,10 +251,124 @@ class Poisson_GMRES{
             }
             return b;
         }
+
+        // one step-Gauss-Seidel iteration to select the initial x0;
+
+        vector<double> GS(const vector<double>& v_old){
+            int idx = 0;
+            vector<double> v_new(N,0.0);
+            double x = 0.0;
+            double y = 0.0;
+            for(int i = 0;i <= 4*n;i++){
+                int J = j_num[i];
+                for(int j = 0;j <= J;j++){
+                    if(i == 0){
+                        y = -2;
+                        x = j*h;
+                        if(j <= J-1){
+                            v_new[idx] = alpha(x,y)*v_old[idx]+beta(x,y)*(v_old[idx]-v_old[idx+J+1])/h;
+                            v_new[idx] = (h*g(x,y)+beta(x,y)*v_old[idx+J+1])/(beta(x,y)+h*alpha(x,y));
+                        }
+                        else{
+                            v_new[idx] = alpha(x,y)*v_old[idx]+beta(x,y)*A*(v_old[idx]-v_new[idx-1]+v_old[idx+J]-v_new[idx-1])/h;
+                            v_new[idx] = (h*g(x,y)+beta(x,y)*A*(2*v_new[idx-1]-v_old[idx+J]))/(A*beta(x,y)+h*alpha(x,y));
+                        }
+                    }
+                    else if(i >= 1 && i <= n){
+                        y = -2+i*h;
+                        x = j*h;
+                        if(j == 0){
+                            v_new[idx] = alpha(x,y)*v_old[idx]+beta(x,y)*(v_old[idx]-v_old[idx+1])/h;
+                            v_new[idx] = (h*g(x,y)+beta(x,y)*v_old[idx+1])/(beta(x,y)+h*alpha(x,y));
+                        }
+                        else if(j == J){
+                            v_new[idx] = alpha(x,y)*v_old[idx]+beta(x,y)*A*(2*v_old[idx]-v_new[idx-1]-v_new[idx-J-2])/h;
+                            v_new[idx] = (h*g(x,y)+A*beta(x,y)*(v_new[idx-1]+v_new[idx-J-2]))/(2*A*beta(x,y)+h*alpha(x,y));
+                        }
+                        else{
+                            v_new[idx] = (4*v_old[idx]-v_new[idx-1]-v_old[idx+1]-v_old[idx+J+1]-v_new[idx-J-2])/h2;
+                            v_new[idx] = (v_new[idx-1]+v_old[idx+J+1]+v_old[idx+1]+v_new[idx-J-2]+h2*f(x,y))/4;
+                        }
+                    }
+                    else if(i >= n+1 && i <= 3*n-1){
+                        if(j == 0){
+                            x = 0;
+                            y =-2+i*h;
+                            v_new[idx] = alpha(x,y)*v_old[idx]+beta(x,y)*(v_old[idx]-v_old[idx+1])/h;
+                            v_new[idx] = (h*g(x,y)+beta(x,y)*v_old[idx+1])/(beta(x,y)+h*alpha(x,y));
+                        }
+                        else if(j == J){
+                            if((i % n) == 0){
+                                x = j*h;
+                                y = -2+i*h;
+                            }
+                            else{
+                                x = (j+0.4)*h;
+                                y = -2+(i-0.2)*h;
+                            }
+                            v_new[idx] = alpha(x,y)*v_old[idx]+beta(x,y)*B*(3*v_old[idx]-2*v_new[idx-1]-v_old[idx+J+1])/h;
+                            v_new[idx] = (h*g(x,y)+beta(x,y)*(x,y)*B*(2*v_new[idx-1]-v_old[idx+J+1]))/(B*beta(x,y)*3*B+h*alpha(x,y));
+                        }
+                        else{
+                            if((i % n) == 0){
+                                v_new[idx] = (4*v_old[idx]-v_new[idx-1]-v_old[idx+1]-v_old[idx+1+J]-v_new[idx-J])/h2;
+                                v_new[idx] = (v_new[idx-1]+v_new[idx-J]+v_old[idx+1]+v_old[idx+1+J]+h2*f(x,y))/4;
+                            }
+                            else{
+                                v_new[idx] = (4*v_old[idx]-v_new[idx-1]-v_old[idx+1]-v_old[idx+1+J]-v_new[idx-J-1])/h2;
+                                v_new[idx] = (v_new[idx-1]+v_new[idx-J-1]+v_old[idx+1]+v_old[idx+1+J]+h2*f(x,y))/4;
+                            }
+                        }
+                    }
+                    else if(i == 3*n){
+                        y = 1;
+                        if(j == 0){
+                            x = 0;
+                            v_new[idx] = alpha(x,y)*v_old[idx]+beta(x,y)*(v_old[idx]-v_old[idx+1])/h;
+                            v_new[idx] = (h*g(x,y)+beta(x,y)*v_old[idx+1])/(beta(x,y)+h*alpha(x,y));
+                        }
+                        else if(j == J){
+                            x = 2;
+                            v_new[idx] = alpha(x,y)*v_old[idx]+beta(x,y)*A*(v_old[idx]-v_new[idx-1]+v_old[idx-1+J]-v_new[idx-1])/h;
+                            v_new[idx] = (h*g(x,y)+beta(x,y)*A*(2*v_new[idx-1]-v_old[idx-1+J]))/(A*beta(x,y)+h*alpha(x,y));
+                        }
+                        else{
+                            x = j*h;
+                            v_new[idx] = (4*v_old[idx]-v_new[idx-1]-v_old[idx+1]-v_new[idx-J]-v_old[idx+J])/h2;
+                            v_new[idx] = (v_new[idx-1]+v_new[idx-J]+v_old[idx+1]+v_old[idx+J]+h2*f(x,y))/4;
+                        }
+                    }
+                    else if(i >= 3*n+1 && i < 4*n){
+                        y = -2+i*h;
+                        x = y-1+j*h;
+                        if(j == 0){
+                            v_new[idx] = alpha(x,y)*v_old[idx]+beta(x,y)*A*(v_old[idx]-v_old[idx+1]+v_old[idx]-v_new[idx-J-2])/h;
+                            v_new[idx] = (h*g(x,y)+A*beta(x,y)*(v_new[idx-J-2]+v_old[idx+1]))/(2*A*beta(x,y)+h*alpha(x,y));
+                        }
+                        else if(j == J){
+                            v_new[idx] = alpha(x,y)*v_old[idx]+beta(x,y)*A*(v_old[idx]-v_new[idx-1]+v_old[idx]-v_new[idx-J-2])/h;
+                            v_new[idx] = (h*g(x,y)+A*beta(x,y)*(v_new[idx-1]+v_new[idx-J-2]))/(2*A*beta(x,y)+h*alpha(x,y));
+
+                        }
+                        else{
+                            v_new[idx] = (4*v_old[idx]-v_new[idx-1]-v_old[idx+1]-v_old[idx+J]-v_new[idx-J-2])/h2;
+                            v_new[idx] = (v_new[idx-1]+v_new[idx-J-2]+v_old[idx+1]+v_old[idx+J]+h2*f(x,y))/4;
+                        }
+                    }
+                    else{
+                        x = 1;
+                        y = 2;
+                        v_new[idx] = alpha(x,y)*v_old[idx]+beta(x,y)*A*(v_old[idx]-v_new[idx-J-2]+v_new[idx-J-3]-v_old[idx-J-2])/h;
+                        v_new[idx] = (h*g(x,y)+A*beta(x,y)*(2*v_new[idx-J-2]-v_new[idx-J-3]))/(A*beta(x,y)+h*alpha(x,y));
+                    }
+                    idx++;
+                }
+            }
+            return v_new;
+        }
         vector<double> Ax(const vector<double>& v){
             int idx = 0;
             vector<double> z(N,0.0);
-            
             double x = 0.0;
             double y = 0.0;
             for(int i = 0;i <= 4*n;i++){
@@ -311,10 +435,10 @@ class Poisson_GMRES{
                         }
                         else{
                             x = j*h;
-                            z[idx] = (4*v[idx]-v[idx-1]+v[idx+1]-v[idx-J]-v[idx+J])/h2;
+                            z[idx] = (4*v[idx]-v[idx-1]-v[idx+1]-v[idx-J]-v[idx+J])/h2;
                         }
                     }
-                    else if(i >= 3*n+1 && i<4*n){
+                    else if(i >= 3*n+1 && i < 4*n){
                         y = -2+i*h;
                         x = y-1+j*h;
                         if(j == 0){
@@ -346,11 +470,13 @@ class Poisson_GMRES{
                 }
             }
             return z;
-        }
+        }  
         //GMRES(m)
-        vector<double> GMRES(vector<double>& x0, const double epsilon){
+        vector<double> GMRES(vector<double>& x0, const double epsilon, const double max_iter){
             auto b = RHS();
-            for(int k = 1;k <= 1e5;k++){
+            int iter = 0;
+            for(int k = 1;k <= max_iter;k++){
+                iter++;
                 auto r0 = vec_subtract(b,Ax(x0));
                 auto H = Arnoldi(r0,epsilon);
                 int l = H.size();
@@ -363,33 +489,47 @@ class Poisson_GMRES{
                 auto xl = vec_add(x0,Vyl);
                 if(residual < epsilon){
                     u = xl;
+                    cout<<"GMRES converged at "<<iter<<" iterations"<<endl;
                     break;
                 }
                 else{
                     x0 = xl;
                 }
             }
+            if(iter == max_iter) cout<<"GMRES not convergee!"<<endl;
             return u;
         }
         void solve(){
+            auto b = RHS();
             vector<double> x0(N,0.0);
+            for(int k = 1;k <= 10;k++){
+                x0 = GS(x0);
+            }
             double epsilon = 1e-12;
-            auto xl = GMRES(x0,epsilon);
+            int max_iter = 1e5;
+            auto xl = GMRES(x0,epsilon,max_iter);
+            for(int k = 1;k <= 10;k++){
+                xl = GS(xl);
+            }
+
         }
         void print(){
-            int idx = N-1;
-            for(int i = 4*n;i >= 0 ;i--){
+            int idx = 0;
+            double error = 0.0;
+            for(int i = 0;i <= 4*n ;i++){
                 for(int j = 0;j <= j_num[i];j++){
                     cout<<u[idx]<<" ";
-                    idx--;
+                    error = max(error,fabs(u[idx]-solu[idx]));
+                    idx++;
                 }
                 cout<<endl;
             }
+            cout<<"Maxmimum Error : "<<error<<endl;
         }
 };
 int main(){
-    double h=1e-2;
-    int m = 5;
+    double h = 1e-2;
+    int m = 10;
     Poisson_GMRES P(h,m);
     P.solve();
     P.print();

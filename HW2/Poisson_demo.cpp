@@ -201,9 +201,9 @@ class Poisson{
 
 };
 int main(){
-    double h=1e-2;
+    double h=1e-1;
     Poisson P=Poisson(h);
-    P.SOR(1e9,1e-6);
+    P.SOR(1e9,1e-7);
     auto u=P.getu();
     P.print();
     system("pause");
