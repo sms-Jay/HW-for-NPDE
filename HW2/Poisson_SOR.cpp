@@ -41,10 +41,10 @@ class Poisson_SOR{
             return 0;
         };//源项
         double alpha(double x, double y){
-            return 2;
+            return 1;
         };
         double beta(double x, double y){
-            return 1;
+            return 0;
         };//beta=0即Dirichelet条件
         double g(double x, double y){
             return 1;

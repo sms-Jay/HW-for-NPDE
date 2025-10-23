@@ -1,0 +1,35 @@
+Dirichlet:alpha=1,beta=0
+When h = 0.125 , GMRES converged at 16 iterations
+When h = 0.125 , Maxmimum Error : 0.003131
+When h = 0.0625 , GMRES converged at 48 iterations
+When h = 0.0625 , Maxmimum Error : 0.00158501
+When h = 0.03125 , GMRES converged at 172 iterations
+When h = 0.03125 , Maxmimum Error : 0.000794957
+When h = 0.015625 , GMRES converged at 619 iterations
+When h = 0.015625 , Maxmimum Error : 0.000397785
+When h = 0.0078125 , GMRES converged at 2367 iterations
+When h = 0.0078125 , Maxmimum Error : 0.000198931
+
+Neumann:alpha=0,beta=1
+When h = 0.125 , GMRES converged at 101 iterations
+When h = 0.125 , Maxmimum Error : 0.0367982
+When h = 0.0625 , GMRES converged at 502 iterations
+When h = 0.0625 , Maxmimum Error : 0.0187094
+When h = 0.03125 , GMRES converged at 1169 iterations
+When h = 0.03125 , Maxmimum Error : 0.00965699
+When h = 0.015625 , GMRES converged at 5983 iterations
+When h = 0.015625 , Maxmimum Error : 0.00501237
+When h = 0.0078125 , GMRES converged at 31606 iterations
+When h = 0.0078125 , Maxmimum Error : 0.0026049
+
+Robin:alpha=1, beta=1
+When h = 0.125 , GMRES converged at 42 iterations
+When h = 0.125 , Maxmimum Error : 0.0167309
+When h = 0.0625 , GMRES converged at 104 iterations
+When h = 0.0625 , Maxmimum Error : 0.00809732
+When h = 0.03125 , GMRES converged at 321 iterations
+When h = 0.03125 , Maxmimum Error : 0.00399486
+When h = 0.015625 , GMRES converged at 1831 iterations
+When h = 0.015625 , Maxmimum Error : 0.0019821
+When h = 0.0078125 , GMRES converged at 8553 iterations
+When h = 0.0078125 , Maxmimum Error : 0.000987801

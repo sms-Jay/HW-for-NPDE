@@ -1,19 +1,20 @@
+
 #include <iostream>
 #include <vector>
 #include <fstream>
 using namespace std;
-// ±¾´úÂëÊµÏÖÏ¡Êè¾ØÕóµÄCSR¸ñÊ½
+// æœ¬ä»£ç å®ç°ç¨€ç–çŸ©é˜µçš„CSRæ ¼å¼
 class CSR{
     private:
-        int row; // ĞĞÊı
-        int col; // ÁĞÊı
-        int num; // ·ÇÁãÔª¸öÊı
-        vector<double> values; // ·ÇÁãÔªËØÖµ
-        vector<int> col_idx; // ·ÇÁãÔªÁĞÖ¸±ê
-        vector<int> row_ptr; // ĞĞÖ¸Õë£¬±íÊ¾Ã¿Ò»ĞĞµÚÒ»¸ö·ÇÁãÔªÔÚvaluesºÍcol_idxÖĞµÄÎ»ÖÃ
+        int row; // è¡Œæ•°
+        int col; // åˆ—æ•°
+        int num; // éé›¶å…ƒä¸ªæ•°
+        vector<double> values; // éé›¶å…ƒç´ å€¼
+        vector<int> col_idx; // éé›¶å…ƒåˆ—æŒ‡æ ‡
+        vector<int> row_ptr; // è¡ŒæŒ‡é’ˆï¼Œè¡¨ç¤ºæ¯ä¸€è¡Œç¬¬ä¸€ä¸ªéé›¶å…ƒåœ¨valueså’Œcol_idxä¸­çš„ä½ç½®
     public:
-        // 1.´ÓÖ¸¶¨ÎÄ¼ş¶ÁÈëÏ¡Êè¾ØÕó
-        // ÊäÈë¸ñÊ½Îª.mtx¸ñÊ½£ºµÚÒ»ĞĞÎªĞĞÊı¡¢ÁĞÊı¡¢·ÇÁãÔª¸öÊı£¬ºóĞøÃ¿ĞĞ±íÊ¾Ò»¸ö·ÇÁãÔªµÄĞĞºÅ¡¢ÁĞºÅ¡¢Öµ
+        // 1.ä»æŒ‡å®šæ–‡ä»¶è¯»å…¥ç¨€ç–çŸ©é˜µ
+        // è¾“å…¥æ ¼å¼ä¸º.mtxæ ¼å¼ï¼šç¬¬ä¸€è¡Œä¸ºè¡Œæ•°ã€åˆ—æ•°ã€éé›¶å…ƒä¸ªæ•°ï¼Œåç»­æ¯è¡Œè¡¨ç¤ºä¸€ä¸ªéé›¶å…ƒçš„è¡Œå·ã€åˆ—å·ã€å€¼
         void readFromfile(const string& filename){
             ifstream infile(filename);
             if(!infile.is_open()){
@@ -29,113 +30,113 @@ class CSR{
             for(int i=0;i<num;i++){
                 infile>>r>>c>>v;
                 values[i] = v;
-                col_idx[i] = c-1; // ÁĞºÅ´Ó0¿ªÊ¼
+                col_idx[i] = c-1; // åˆ—å·ä»0å¼€å§‹
                 row_ptr[r]++;
             }
             infile.close();
 
             for(int i=1;i<=row;i++){
-                row_ptr[i] += row_ptr[i-1];//ĞĞÖ¸±êÀÛ¼Ó
-                                           // row_ptr[i]ÏÖÔÚ±íÊ¾µÚiĞĞµÚÒ»¸ö·ÇÁãÔªÔÚvaluesºÍcol_idxÖĞµÄÎ»ÖÃ£¬½ø¶øµÚiĞĞÓĞrow_ptr[i]-row_ptr[i-1]¸ö·ÇÁãÔª
+                row_ptr[i] += row_ptr[i-1];//è¡ŒæŒ‡æ ‡ç´¯åŠ 
+                                           // row_ptr[i]ç°åœ¨è¡¨ç¤ºç¬¬iè¡Œç¬¬ä¸€ä¸ªéé›¶å…ƒåœ¨valueså’Œcol_idxä¸­çš„ä½ç½®ï¼Œè¿›è€Œç¬¬iè¡Œæœ‰row_ptr[i]-row_ptr[i-1]ä¸ªéé›¶å…ƒ
             }
             return;
         }
-        // 2.¹¹½¨±¾¿Î³Ì³£ÓÃÏ¡Êè¾ØÕó£º¶şÎ¬Îåµã²î·ÖÀ­ÆÕÀ­Ë¹¾ØÕó£¬Dirichlet±ß½çÌõ¼ş£¬Ö»ĞèÒªÇó½âÄÚ²¿½Úµã
-        void constructLaplacian(int n){//×¢ÒânÎª·½³Ì¹æÄ££¬²»ÊÇ½Úµã×ÜÊı
-            int N = n*n; // ½Úµã×ÜÊı
+        // 2.æ„å»ºæœ¬è¯¾ç¨‹å¸¸ç”¨ç¨€ç–çŸ©é˜µï¼šäºŒç»´äº”ç‚¹å·®åˆ†æ‹‰æ™®æ‹‰æ–¯çŸ©é˜µï¼ŒDirichletè¾¹ç•Œæ¡ä»¶ï¼Œåªéœ€è¦æ±‚è§£å†…éƒ¨èŠ‚ç‚¹
+        void constructLaplacian(int n){//æ³¨æ„nä¸ºæ–¹ç¨‹è§„æ¨¡ï¼Œä¸æ˜¯èŠ‚ç‚¹æ€»æ•°
+            int N = n*n; // èŠ‚ç‚¹æ€»æ•°
             row = N;
             col = N;
-            num = 5*N - 4*n;// ·ÇÁãÔª¸öÊı
+            num = 5*N - 4*n;// éé›¶å…ƒä¸ªæ•°
             values.resize(num);
             col_idx.resize(num);
             row_ptr.resize(row+1,0);
-            // ÒÔidx½øĞĞ±éÀú£¬idx=i*n+j
+            // ä»¥idxè¿›è¡Œéå†ï¼Œidx=i*n+j
             for(int i=0;i<n;i++){
                 for(int j=0;j<n;j++){
                     int idx = i*n+j;
-                    int pos = row_ptr[idx];// µ±Ç°ĞĞµÚÒ»¸ö·ÇÁãÔªÔÚvaluesºÍcol_idxÖĞµÄÎ»ÖÃ
-                    // ¸ù¾İÎ»ÖÃÈ·¶¨·ÇÁãÔª¸öÊı
+                    int pos = row_ptr[idx];// å½“å‰è¡Œç¬¬ä¸€ä¸ªéé›¶å…ƒåœ¨valueså’Œcol_idxä¸­çš„ä½ç½®
+                    // æ ¹æ®ä½ç½®ç¡®å®šéé›¶å…ƒä¸ªæ•°
                     if(i==0){
-                        if(j==0){//×óÏÂ½Ç
+                        if(j==0){//å·¦ä¸‹è§’
                             row_ptr[idx+1] = pos+3;
                             values[pos] = 4.0;col_idx[pos] = idx;
-                            values[pos+1] = -1.0;col_idx[pos+1] = idx+1;//ÓÒ±ß½Úµã
-                            values[pos+2] = -1.0;col_idx[pos+2] = idx+n;//ÉÏ±ß½Úµã
+                            values[pos+1] = -1.0;col_idx[pos+1] = idx+1;//å³è¾¹èŠ‚ç‚¹
+                            values[pos+2] = -1.0;col_idx[pos+2] = idx+n;//ä¸Šè¾¹èŠ‚ç‚¹
                         }
-                        else if(j==n-1){//ÓÒÏÂ½Ç
+                        else if(j==n-1){//å³ä¸‹è§’
                             row_ptr[idx+1] = pos+3;
-                            values[pos] = -1.0;col_idx[pos] = idx-1;//×ó±ß½Úµã
+                            values[pos] = -1.0;col_idx[pos] = idx-1;//å·¦è¾¹èŠ‚ç‚¹
                             values[pos+1] = 4.0;col_idx[pos+1] = idx;
-                            values[pos+2] = -1.0;col_idx[pos+2] = idx+n;//ÉÏ±ß½Úµã
+                            values[pos+2] = -1.0;col_idx[pos+2] = idx+n;//ä¸Šè¾¹èŠ‚ç‚¹
                         }
-                        else{//ÏÂ±ß½ç
+                        else{//ä¸‹è¾¹ç•Œ
                             row_ptr[idx+1] = pos+4;
-                            values[pos] = -1.0;col_idx[pos] = idx-1;//×ó±ß½Úµã
+                            values[pos] = -1.0;col_idx[pos] = idx-1;//å·¦è¾¹èŠ‚ç‚¹
                             values[pos+1] = 4.0;col_idx[pos+1] = idx;
-                            values[pos+2] = -1.0;col_idx[pos+2] = idx+1;//ÓÒ±ß½Úµã
-                            values[pos+3] = -1.0;col_idx[pos+3] = idx+n;//ÉÏ±ß½Úµã
+                            values[pos+2] = -1.0;col_idx[pos+2] = idx+1;//å³è¾¹èŠ‚ç‚¹
+                            values[pos+3] = -1.0;col_idx[pos+3] = idx+n;//ä¸Šè¾¹èŠ‚ç‚¹
                         }
                     }
                     else if(i==n-1){
-                        if(j==0){//×óÉÏ½Ç
+                        if(j==0){//å·¦ä¸Šè§’
                             row_ptr[idx+1] = pos+3;
-                            values[pos] = -1.0;col_idx[pos] = idx-n;//ÏÂ±ß½Úµã
+                            values[pos] = -1.0;col_idx[pos] = idx-n;//ä¸‹è¾¹èŠ‚ç‚¹
                             values[pos+1] = 4.0;col_idx[pos+1] = idx;
-                            values[pos+2] = -1.0;col_idx[pos+2] = idx+1;//ÓÒ±ß½Úµã
+                            values[pos+2] = -1.0;col_idx[pos+2] = idx+1;//å³è¾¹èŠ‚ç‚¹
                         }
-                        else if(j==n-1){//ÓÒÉÏ½Ç
+                        else if(j==n-1){//å³ä¸Šè§’
                             row_ptr[idx+1] = pos+3;
-                            values[pos] = -1.0;col_idx[pos] = idx-n;//ÏÂ±ß½Úµã
-                            values[pos+1] = -1.0;col_idx[pos+1] = idx-1;//×ó±ß½Úµã
+                            values[pos] = -1.0;col_idx[pos] = idx-n;//ä¸‹è¾¹èŠ‚ç‚¹
+                            values[pos+1] = -1.0;col_idx[pos+1] = idx-1;//å·¦è¾¹èŠ‚ç‚¹
                             values[pos+2] = 4.0;col_idx[pos+2] = idx;
                         }
-                        else{//ÉÏ±ß½ç
+                        else{//ä¸Šè¾¹ç•Œ
                             row_ptr[idx+1] = pos+4;
-                            values[pos] = -1.0;col_idx[pos] = idx-n;//ÏÂ±ß½Úµã
-                            values[pos+1] = -1.0;col_idx[pos+1] = idx-1;//×ó±ß½Úµã
+                            values[pos] = -1.0;col_idx[pos] = idx-n;//ä¸‹è¾¹èŠ‚ç‚¹
+                            values[pos+1] = -1.0;col_idx[pos+1] = idx-1;//å·¦è¾¹èŠ‚ç‚¹
                             values[pos+2] = 4.0;col_idx[pos+2] = idx;
-                            values[pos+3] = -1.0;col_idx[pos+3] = idx+1;//ÓÒ±ß½Úµã
+                            values[pos+3] = -1.0;col_idx[pos+3] = idx+1;//å³è¾¹èŠ‚ç‚¹
                         }
                     }
                     else{
-                        if(j==0){//×ó±ß½ç
+                        if(j==0){//å·¦è¾¹ç•Œ
                             row_ptr[idx+1] = pos+4;
-                            values[pos] = -1.0;col_idx[pos] = idx-n;//ÏÂ±ß½çµã
+                            values[pos] = -1.0;col_idx[pos] = idx-n;//ä¸‹è¾¹ç•Œç‚¹
                             values[pos+1] = 4.0;col_idx[pos+1] = idx;
-                            values[pos+2] = -1.0;col_idx[pos+2] = idx+1;//ÓÒ±ß½Úµã
-                            values[pos+3] = -1.0;col_idx[pos+3] = idx+n;//ÉÏ±ß½Úµã
+                            values[pos+2] = -1.0;col_idx[pos+2] = idx+1;//å³è¾¹èŠ‚ç‚¹
+                            values[pos+3] = -1.0;col_idx[pos+3] = idx+n;//ä¸Šè¾¹èŠ‚ç‚¹
                         }
-                        else if(j==n-1){//ÓÒ±ß½ç
+                        else if(j==n-1){//å³è¾¹ç•Œ
                             row_ptr[idx+1] = pos+4;
-                            values[pos] = -1.0;col_idx[pos] = idx-n;//ÏÂ±ß½çµã
-                            values[pos+1] = -1.0;col_idx[pos+1] = idx-1;//×ó±ß½Úµã
+                            values[pos] = -1.0;col_idx[pos] = idx-n;//ä¸‹è¾¹ç•Œç‚¹
+                            values[pos+1] = -1.0;col_idx[pos+1] = idx-1;//å·¦è¾¹èŠ‚ç‚¹
                             values[pos+2] = 4.0;col_idx[pos+2] = idx;
-                            values[pos+3] = -1.0;col_idx[pos+3] = idx+n;  //ÉÏ±ß½Úµã
+                            values[pos+3] = -1.0;col_idx[pos+3] = idx+n;  //ä¸Šè¾¹èŠ‚ç‚¹
                         }
                         else{
                             row_ptr[idx+1] = pos+5;
-                            values[pos] = -1.0;col_idx[pos] = idx-n;//ÏÂ±ß½çµã
-                            values[pos+1] = -1.0;col_idx[pos+1] = idx-1;//×ó±ß½Úµã
+                            values[pos] = -1.0;col_idx[pos] = idx-n;//ä¸‹è¾¹ç•Œç‚¹
+                            values[pos+1] = -1.0;col_idx[pos+1] = idx-1;//å·¦è¾¹èŠ‚ç‚¹
                             values[pos+2] = 4.0;col_idx[pos+2] = idx;
-                            values[pos+3] = -1.0;col_idx[pos+3] = idx+1;//ÓÒ±ß½Úµã
-                            values[pos+4] = -1.0;col_idx[pos+4] = idx+n;//ÉÏ±ß½Úµã
+                            values[pos+3] = -1.0;col_idx[pos+3] = idx+1;//å³è¾¹èŠ‚ç‚¹
+                            values[pos+4] = -1.0;col_idx[pos+4] = idx+n;//ä¸Šè¾¹èŠ‚ç‚¹
                         }
                     }
                 }
             }
             return;
         }
-        // ĞŞ¸ÄÖ¸¶¨Î»ÖÃµÄÔªËØÖµ
-        // ×¢Òâ£º¸Ãº¯Êı²»Ö§³ÖÔö¼ÓĞÂµÄ·ÇÁãÔª£¬Ö»ÄÜĞŞ¸ÄÒÑÓĞµÄ·ÇÁãÔª
+        // ä¿®æ”¹æŒ‡å®šä½ç½®çš„å…ƒç´ å€¼
+        // æ³¨æ„ï¼šè¯¥å‡½æ•°ä¸æ”¯æŒå¢åŠ æ–°çš„éé›¶å…ƒï¼Œåªèƒ½ä¿®æ”¹å·²æœ‰çš„éé›¶å…ƒ
         void modify(int r, int c, double v){
-            for(int i=row_ptr[r-1];i<row_ptr[r];i++){// ±éÀúµÚrĞĞµÄ·ÇÁãÔª
+            for(int i=row_ptr[r-1];i<row_ptr[r];i++){// éå†ç¬¬rè¡Œçš„éé›¶å…ƒ
                 if(col_idx[i]==c-1){
                     values[i] = v;
                     return;
                 }
             }
         }
-        // ´òÓ¡¾ØÕó
+        // æ‰“å°çŸ©é˜µ
         void print(){
             cout<<"Matrix form:"<<endl;
             for(int i=0;i<row;i++){
@@ -157,7 +158,7 @@ class CSR{
                 cout<<endl;
             }
         }
-        // 3. ¾ØÕóÏòÁ¿³Ë·¨
+        // 3. çŸ©é˜µå‘é‡ä¹˜æ³•
         vector<double> SpMV(const vector<double>& x){
             if(x.size()!=col){
                 cout<<"Dimension mismatch in SpMV!"<<endl;
@@ -171,7 +172,7 @@ class CSR{
             }
             return b;       
         }
-        // 4.È¡¾ø¶ÔÉÏÈı½Ç¡¢ÏÂÈı½Ç¡¢¶Ô½ÇÏß²¿·Ö
+        // 4.å–ç»å¯¹ä¸Šä¸‰è§’ã€ä¸‹ä¸‰è§’ã€å¯¹è§’çº¿éƒ¨åˆ†
         CSR getUpperTriangular(const CSR A){
             CSR U;
             U.row = A.row;
@@ -182,7 +183,7 @@ class CSR{
             U.col_idx.clear();
             for(int i=0;i<A.row;i++){
                 for(int j=A.row_ptr[i];j<A.row_ptr[i+1];j++){
-                    if(A.col_idx[j]>i){// ÉÏÈı½Ç²¿·Ö
+                    if(A.col_idx[j]>i){// ä¸Šä¸‰è§’éƒ¨åˆ†
                         U.col_idx.push_back(A.col_idx[j]);
                         U.values.push_back(A.values[j]);
                         U.num++;
@@ -195,7 +196,7 @@ class CSR{
             }
             return U;
         }
-        // È¡¾ø¶ÔÏÂÈı½Ç²¿·Ö
+        // å–ç»å¯¹ä¸‹ä¸‰è§’éƒ¨åˆ†
         CSR getLowerTriangular(const CSR A){
             CSR L;
             L.row = A.row;
@@ -206,7 +207,7 @@ class CSR{
             L.col_idx.clear();
             for(int i=0;i<A.row;i++){
                 for(int j=A.row_ptr[i];j<A.row_ptr[i+1];j++){
-                    if(A.col_idx[j]<i){// ÏÂÈı½Ç²¿·Ö
+                    if(A.col_idx[j]<i){// ä¸‹ä¸‰è§’éƒ¨åˆ†
                         L.col_idx.push_back(A.col_idx[j]);
                         L.values.push_back(A.values[j]);
                         L.num++;
@@ -219,7 +220,7 @@ class CSR{
             }
             return L;
         }
-        // È¡¶Ô½ÇÏß²¿·Ö
+        // å–å¯¹è§’çº¿éƒ¨åˆ†
         CSR getDiagonal(const CSR A){
             CSR D;
             D.row = A.row;
@@ -230,7 +231,7 @@ class CSR{
             D.col_idx.clear();
             for(int i=0;i<A.row;i++){
                 for(int j=A.row_ptr[i];j<A.row_ptr[i+1];j++){
-                    if(A.col_idx[j]==i){// ¶Ô½ÇÏß²¿·Ö
+                    if(A.col_idx[j]==i){// å¯¹è§’çº¿éƒ¨åˆ†
                         D.col_idx.push_back(A.col_idx[j]);
                         D.values.push_back(A.values[j]);
                         D.num++;
@@ -245,7 +246,7 @@ class CSR{
         }
 };
 int main(){
-    // ¼òµ¥²âÊÔ
+    // ç®€å•æµ‹è¯•
     
     CSR A;
     A.readFromfile("SpM_input.txt");

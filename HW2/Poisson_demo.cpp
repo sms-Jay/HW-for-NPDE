@@ -5,6 +5,7 @@
 #include <cmath>
 #include <algorithm>
 #include <chrono>
+const double PI = 3.14159265358979323846264338327950288;
 using namespace std;
 // 本次上机作业的目标是实现求解非张量积形式的区域上的Poisson方程，赋予Robin边界条件
 // 测试方程：u(x,y)=1/2 x^2+ 1/2 y^2+x+y+1;
@@ -46,33 +47,22 @@ class Poisson{
                     double y=-2+i*h;
                     if(i<=3*N) x=j*h;
                     else x=j*h+y-1;
-                    solu[i][j]=0.5*x*x+0.5*y*y+x+y+1;
+                    solu[i][j]=sin(PI*x)*cos(2*PI*y)/(5.0*PI*PI);
                 }
             }
         };
         //方程相应函数
         double f(double x,double y){
-            return -2;
+            return sin(PI*x)*cos(2*PI*y);
         };//源项
         double alpha(double x, double y){
-            return 2;
+            return 1;
         };
         double beta(double x, double y){
-            return 1;
+            return 0;
         };//beta=0即Dirichelet条件
         double g(double x, double y){
-            double d=alpha(x,y)*(0.5*x*x+0.5*y*y+x+y+1);
-            double b=beta(x,y);
-            if(x>=0 && x<2 && y==-2) return b*(-y-1)+d;
-            else if(x>1 && x<=2 && abs(y+x)<1e-5) return b*(x+y+2)*A+d;
-            else if(x>=1 && x<2 && abs(y-2*x+3)<1e-5) return b*(2*x-y+1)*B+d;
-            else if(x>1 && x<=2 && abs(y+x-3)<1e-5) return b*(x+y+2)*A+d;
-            else if(x>0 && x<=1 && abs(y-x-1)<1e-5) return b*(-x+y)*A+d;
-            else if(x==0 && y>-2 && y<=1) return b*(-x-1)+d;
-            else {
-                cout<<x<<" "<<y<<endl;
-                return 0.0;
-            }
+            return sin(PI*x)*cos(2*PI*y)/(5.0*PI*PI);
         };//Robin边界条件
         //内点：五点差分；边界点或临近边界点：Robin边界条件；角点：左侧外法项边界条件。
         //使用SOR迭代法，分量式更新，自左下而右上，初值为0
@@ -201,7 +191,7 @@ class Poisson{
 
 };
 int main(){
-    double h=1e-1;
+    double h=1e-2;
     Poisson P=Poisson(h);
     P.SOR(1e9,1e-7);
     auto u=P.getu();
