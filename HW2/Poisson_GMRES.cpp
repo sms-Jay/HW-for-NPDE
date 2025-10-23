@@ -528,7 +528,7 @@ class Poisson_GMRES{
         }
 };
 int main(){
-    double h = 1e-2;
+    double h = 1e-1;
     int m = 10;
     Poisson_GMRES P(h,m);
     P.solve();
