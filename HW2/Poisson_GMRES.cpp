@@ -530,7 +530,7 @@ class Poisson_GMRES{
         }
 };
 int main(){
-    for(int k = 7;k <= 7; k++){
+    for(int k = 3;k <= 7; k++){
         double h = 1.0/pow(2,k);
         int m = 10;
         Poisson_GMRES P(h,m);
