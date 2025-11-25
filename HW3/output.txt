@@ -1,0 +1,14 @@
+初值为sin(x)+sin(y):
+solver : backward_euler, dt : 1 , h : 1 , error : 0.267474
+solver : backward_euler, dt : 0.25 , h : 0.5 , error : 0.0926132
+solver : backward_euler, dt : 0.0625 , h : 0.25 , error : 0.0380348
+solver : backward_euler, dt : 0.015625 , h : 0.125 , error : 0.0244478
+solver : backward_euler, dt : 0.00390625 , h : 0.0625 , error : 0.0128886
+
+solver : forward_euler, dt : 0.2 , h : 1 , error : 0.199468
+solver : forward_euler, dt : 0.05 , h : 0.5 , error : 0.0957478
+solver : forward_euler, dt : 0.0125 , h : 0.25 , error : 0.0356629
+solver : forward_euler, dt : 0.003125 , h : 0.125 , error : 0.0221832
+solver : forward_euler, dt : 0.00078125 , h : 0.0625 , error : 0.0111054
+
+初值为0：

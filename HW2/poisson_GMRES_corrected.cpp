@@ -5,8 +5,9 @@
 #include <iomanip>
 #include <cmath>
 using namespace std;
-
+// Using a non-uniform grid
 #define M_PI
+#define M_SQRT1_2
 class Poisson_GMRES{
     private:
         double h;
@@ -15,7 +16,7 @@ class Poisson_GMRES{
         // m-step GMRES
         int m;
         int n;
-        // total number of grid points      
+        // total number of grid points
         int N;
         const double A = 1.0/sqrt(2);
         const double B = 1.0/sqrt(5);
