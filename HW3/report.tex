@@ -1,5 +1,5 @@
 \documentclass[11pt,a4 paper,one side]{article}
-\usepackage{amsmath,amssymb,graphicx}
+\usepackage{amsmath,amssymb,graphicx,subcaption}
 \usepackage{ctex}  
 \usepackage[colorlinks=true,linkcolor=red,citecolor=red,filecolor=magenta,urlcolor=cyan]{hyperref}
 \usepackage{bookmark}
@@ -26,12 +26,137 @@
 其中，$u_0(x,y),g(x,y,t)$是给定的函数且满足相容性条件，$\delta(x)$是Dirac函数，$(x_0,y_0)$选取为$\Omega$内一点，
 $\rho(t)$举例可取为$\rho(t)=\sin(t)$。区域$\Omega$如图\ref{Domain}所示。\begin{figure}
     \centering
-    \includegraphics[width=0.9\linewidth]{Domain.png}
+    \includegraphics[width=0.5\linewidth]{Domain.png}
     \caption{Domain}
     \label{Domain}
 \end{figure}
 \section{网格离散}
+仍然采取最朴素的均匀网格离散，与HW2一致。如图\ref{Grid}所示。\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{Grid.jpg}
+    \caption{Grid}
+    \label{Grid}
+\end{figure}
 \section{数值格式}
+
+\subsection{有限差分法}
+使用有限差分法存在无法离散化$\delta(x_0,y_0)$的问题，于是采取正则化策略：
+\begin{equation}
+    \delta_{\sigma}(x,y)=\frac{1}{2\pi \sigma^2}e^{\frac{|x-x_0|^2+|y-y_0|^2}{2\sigma^2}}\approx \delta(x_0,y_0)
+\end{equation}
+这样就可以自然的进行离散。需要阐述的是此正则化的合理性：因为根据热方程解的形式，初值问题热方程的解为\begin{equation}
+            u(x,y,t)=\int_{\mathbb{R}^2}K(x-\xi,y-\eta,t)u_0(\xi,\eta) d\xi d\eta +
+             \int_{0}^{t}\int_{\mathbb{R}^2}K(x-\xi,y-\eta,t-\tau)f(\xi,\eta,\tau)d\xi d\eta d\tau
+\end{equation}
+于是正则化前后方程的真实解的误差满足\begin{align}
+    e(x,y,t)&=\int_{0}^{t}\int_{\mathbb{R}^2}K(x-\xi,y-\eta,t-\tau)\rho(\tau)(\delta_{\sigma} (\xi,\eta) - \delta (x_0,y_0))d\xi d\eta d\tau\\
+    &=\int_{0}^{t} \rho(t-\tau) (K(x-x_0,y-y_0,\tau)-K(x-x_0,y-y_0,\tau+\sigma^2/2))d\tau
+\end{align}
+选取参数$\sigma=\mathcal{O}(h)$。
+\par 对此正则化后的方程，分别采取时间一阶向前和向后、空间五点差分格式求解，其中向后Euler需要求解线性方程组，用GMRES。
+\subsection{有限体积法}
+在每个内点，取所在单元格为控制体；利用$\delta(x_0,y_0)$在全局积分为1，得到：\begin{align}
+    u_{i,j}'(t)&\approx \frac{d}{dt}\frac{\int_{x_{i-1/2}}^{x_{i+1/2}}\int_{y_{j-1/2}}^{y_{j+1/2}}u(x,y)dxdy}{h^2}\\
+    &=\frac{\Delta_h u_{i,j}+\rho(t)\Delta(x_0,y_0)}{h^2}
+\end{align}
+其中\begin{equation}
+    \Delta(x_0,y_0)=\begin{cases} 1,(x_0,y_0)\in \Omega(i,j) \\ 0,else
+    \end{cases}
+\end{equation}
+一般的内点采用五点中心差分；对于靠近的边界点，取Dirichlet边界点对应值为“热通量”，作五点偏心差分使其保持空间方向的二阶精度，具体格式参见代码。
+分别采取时间一阶向前和向后、空间五点差分格式求解，其中向后Euler需要求解线性方程组，用GMRES。
 \section{数值算例}
+若指定初值条件$u_0(x,y)$，则由热方程解表达式\begin{equation}
+            u(x,y,t)=\int_{\mathbb{R}^2}K(x-\xi,y-\eta,t)u_0(\xi,\eta) d\xi d\eta +
+             \int_{0}^{t}\int_{\mathbb{R}^2}K(x-\xi,y-\eta,t-\tau)f(\xi,\eta,\tau)d\xi d\eta d\tau
+\end{equation}
+可以给出任意时刻的Dirichlet边界条件$g(x,y,t)$和真实解，这便需要数值积分，因此我们编写了Simpson数值积分与热方程真实解的表达式作为头文件。
+为了减小运算量，设定初值条件恒为0，$\rho(t)=\sin (t)$，求解时间为$t_{end}=0.1$，点热源坐标为$(x_0,y_0)=(0.985,0.211)$.FDM算法中设置$\sigma = 0.9h$.
 \section{数值结果展示分析}
+以表格\ref{数值结果展示}展示正常的数值结果
+\begin{table}
+    \centering
+    \begin{tabular}{c c c c}
+        \hline
+        求解器&$dt$&$h$&$\|e_h\|_{2}$\\
+        \hline
+        FDM-forward-Euler & $0.25h^2$ & 0.1& 2.55e-3\\
+        &&0.05&8.22e-4\\
+        &&0.025&3.10e-4\\
+        &&0.0125&4.36e-5\\
+        &&0.00625&1.11e-4\\
+        \hline
+        FDM-backward-Euler & $h^2$ & 0.1 & 2.80e-3\\
+        &&0.05&8.82e-4\\
+        &&0.025&3.22e-4\\
+        &&0.0125&4.70e-5\\
+        &&0.00625&1.11e-4\\
+        \hline
+        FVM-forward-Euler & $0.1h^2$ & 0.1 & 2.09e-3\\
+        && 0.05 & 7.71e-4\\
+        && 0.025 & 3.17e-4\\
+        && 0.0125 & 4.10e-4\\
+        \hline
+        FVM-backward-Euler & $h$ & 0.1 & 3.24e-3\\
+        && 0.05&1.51e-3\\
+        && 0.025&7.37e-4\\
+        && 0.0125&5.39e-4\\
+        && 0.00625&3.17e-4\\
+        \hline
+    \end{tabular}
+    \caption{数值结果展示}
+    \label{数值结果展示}
+\end{table}
+注意：这些数据有一些异常情况，为了展示收敛性，先对这些数据中表现情况较好的一部分作$\log(h)-\log(e_h)$线性回归，结果如图\ref{数值结果}所示，再在下一部分讨论异常情况：
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}{0.45\textwidth}
+         \includegraphics[width=\textwidth]{FDM-forward-Euler.png}
+        \caption{FDM forward Euler}
+        \label{FDM-forward-Euler}
+    \end{subfigure}
+    \begin{subfigure}{0.45\textwidth}
+         \includegraphics[width=\textwidth]{FDM-backward-Euler.png}
+        \caption{FDM-backward-Euler}
+        \label{FDM-backward-Euler}
+    \end{subfigure}
+    \vspace{0.5cm}
+    \begin{subfigure}{0.45\textwidth}
+         \includegraphics[width=\textwidth]{FVM-forward-Euler.png}
+        \caption{FVM-forward-Euler}
+        \label{FVM-forward-Euler}
+    \end{subfigure}
+    \begin{subfigure}{0.45\textwidth}
+         \includegraphics[width=\textwidth]{FVM-backward-Euler.png}
+        \caption{FVM-backward-Euler}
+        \label{FVM-backward-Euler}
+    \end{subfigure}
+    \caption{数值结果}
+    \label{数值结果}
+\end{figure}
+从图\ref{数值结果}中可以看出\begin{itemize}
+    \item 有限差分法在一定区间内表现出1.9阶收敛性，这是因为选取$dt=\mathcal{O}(h^2)$;损失的精度基本是因为边界处理造成的:我们在某些临近边界点采取了线性插值处理。
+    \item 后向Euler的有限体积法在一定区间内表现出1.0阶的收敛性，因为时间步长$dt=\mathcal{O}(h)$.
+    \item 前向Euler的有限体积法中，即使选取$dt=\mathcal{O}(h^2)$，也在一定范围内仅有1.3阶的收敛阶。这说明有限体积法的设计存在问题，或者是在边界条件上的处理仍需思考其合理性。
+\end{itemize}
+\subsection{数值异常现象及思考}
+在做数值实验时，遇到了许多奇怪的数值现象，我们逐一进行列举与思考。
+\begin{itemize}
+    \item 在前向与后向有限差分法中，当$h$从0.0125下降到0.00625，误差反而从4e-5增长到1e-4。可能的原因是：\\
+    1.由于对原方程采取了正则化，前后方程的真实解存在正则化误差，而正则化解是全局有界的，无法描述真实解在点热源处的奇异性行为，因此在点热源附近的误差无法控制。\\
+    2.当网格加密，后向Euler矩阵条件数迅速增大，影响了数值解的精度。\\
+    3.区域本身是非凸多边形，在靠近边界的一些点采取了一阶线性插值，本身存在偏差。
+    \item 在前向有限体积法中也有类似现象，误差在下降一段之后反而开始上升。可能的原因是：\\
+    1.区域本身是非凸多边形，在靠近边界的一些点采取了五点偏心差分，从理论上保证了二阶精度，但由于区域的设置，本身存在偏差。\\
+    2.有限体积法的设计可能存在问题:对于Dirichlet边界，在不规则区域上，无法精确描述其边界上的热流通量，只能采取中点近似处理；
+    如果是对于Neumann边界，可能有限体积法更有利，问题在于需要对靠近边界的点选取合适的多边形控制体并仔细计算通量。
+    \item 在后向有限体积法中，误差保持下降，但是下降速度变量，无法达到一阶收敛性。可能的原因是：\\
+    1.区域本身是非凸多边形，在靠近边界的一些点采取了五点偏心差分，从理论上保证了二阶精度，但由于区域的设置，本身存在偏差。\\
+    2.有限体积法的设计可能存在问题:对于Dirichlet边界，在不规则区域上，无法精确描述其边界上的热流通量，只能采取中点近似处理；
+    如果是对于Neumann边界，可能有限体积法更有利，问题在于需要对靠近边界的点选取合适的多边形控制体并仔细计算通量。\\
+    3.当网格加密，后向Euler矩阵条件数迅速增大，影响了数值解的精度。
+\end{itemize}
+\subsection{总结与反思}
+在一定的离散范围和精度要求之内，两种方法均得到了比较好的实现，从理论分析上看，有限体积法应当表现更好，更符合物理实际，
+但从实际数值效果上课有限差分法略优于有限差分法。下一步，我将再分别从理论分析与实现的层面，再次检查有限体积法的实现是否存在被忽视了的问题。如得到改善，将再次提交。
 \end{document}

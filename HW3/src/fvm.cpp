@@ -286,6 +286,114 @@ public:
         laplace_u = Dux + Duy;
         return laplace_u;
     }
+    double laplace_1(const vector<double>& u, double t, int i, int j, int idx, const vector<vector<double>>& g){
+        double laplace_u = 0.0;
+        double Dux = 0.0;
+        double Duy = 0.0;
+        int jm = point[i][j].jm;
+        int jp = point[i][j].jp;
+        int J = j_num[i];
+        if(i == 0){
+            if(j == 0){
+                Dux = u[idx+1]+g[1][0]-2*u[idx];
+                Duy = u[point[i+1][jp].idx]+g[0][0]-2*u[idx];
+            }
+            else if(j == J-1){
+                Dux = u[idx-1]+g[1][1]-2*u[idx];
+                Duy = g[2][1]+g[0][j]-2*u[idx];
+            }
+            else{
+                Dux = u[idx-1]+u[idx+1]-2*u[idx];
+                Duy = u[point[i+1][jp].idx]+g[0][j]-2*u[idx];
+            }
+        }
+        else if(i >= 1 && i <= n-2){
+            if(j == 0){
+                Dux = u[idx+1]+g[i+1][0]-2*u[idx];
+                Duy = u[point[i+1][jp].idx]+u[point[i-1][jm].idx]-2*u[idx];
+            }
+            else if(j == J-1){
+                Dux = u[idx-1]+g[i+1][1]-2*u[idx];
+                Duy = g[i+2][1]+u[point[i-1][jm].idx]-2*u[idx];
+            }
+            else{
+                Dux = u[idx-1]+u[idx+1]-2*u[idx];
+                Duy = u[point[i+1][jp].idx]+u[point[i-1][jm].idx]-2*u[idx];
+            }
+        }
+        else if(i == n-1){
+            if(j == 0){
+                Dux = u[idx+1]+g[i+1][0]-2*u[idx];
+                Duy = u[point[i+1][jp].idx]+u[point[i-1][jm].idx]-2*u[idx];
+            }
+            else if(j == J-1){
+                Dux = u[idx-1]+g[i+1][1]-2*u[idx];
+                Duy = u[point[i+1][jp].idx]+u[point[i-1][jm].idx]-2*u[idx];
+            }
+            else{
+                Dux = u[idx-1]+u[idx+1]-2*u[idx];
+                Duy = u[point[i+1][jp].idx]+u[point[i-1][jm].idx]-2*u[idx];
+            }
+        }
+        else if (i>=n && i <= 3*n -2 && (i-n)%2==1){
+            if(j == 0){
+                Dux = u[idx+1]+g[i+1][0]-2*u[idx];
+                Duy = u[point[i+1][jp].idx]+u[point[i-1][jm].idx]-2*u[idx];
+            }
+            else if(j == J-1){
+                Dux = u[idx-1]+g[i+1][1]-2*u[idx];
+                Duy = u[point[i+1][jp].idx]+g[i+1][2]-2*u[idx];
+            }
+            else{
+                Dux = u[idx-1]+u[idx+1]-2*u[idx];
+                Duy = u[point[i+1][jp].idx]+u[point[i-1][jm].idx]-2*u[idx];
+            }
+        }
+        else if (i>=n && i <= 3*n -2 && (i-n)%2==0){
+            if(j == 0){
+                Dux = u[idx+1]+g[i+1][0]-2*u[idx];
+                Duy = u[point[i+1][jp].idx]+u[point[i-1][jm].idx]-2*u[idx];
+            }
+            else if(j == J-1){
+                Dux = u[idx-1]+g[i+1][1]-2*u[idx];
+                Duy = u[point[i+1][jp].idx]+u[point[i-1][jm].idx]-2*u[idx];
+            }
+            else{
+                Dux = u[idx-1]+u[idx+1]-2*u[idx];
+                Duy = u[point[i+1][jp].idx]+u[point[i-1][jm].idx]-2*u[idx];
+            }
+        }
+        else if (i == 3*n-1){
+            if(j == 0){
+                Dux = u[idx+1]+g[i+1][0]-2*u[idx];
+                Duy = g[i+2][0]+u[point[i-1][jm].idx]-2*u[idx];
+            }
+            else if(j == J-1){
+                Dux = u[idx-1]+g[i+1][1]-2*u[idx];
+                Duy = g[i+2][1]+g[i+1][2]-2*u[idx];
+            }
+            else{
+                Dux = u[idx-1]+u[idx+1]-2*u[idx];
+                Duy = u[point[i+1][jp].idx]+u[point[i-1][jm].idx]-2*u[idx];
+            }
+        }
+        else{
+            if(j == 0){
+                Dux = u[idx+1]+g[i+1][0]-2*u[idx];
+                Duy = g[i+2][0]+u[point[i-1][jm].idx]-2*u[idx];
+            }
+            else if(j == J-1){
+                Dux = u[idx-1]+g[i+1][1]-2*u[idx];
+                Duy = g[i+2][1]+u[point[i-1][jm].idx]-2*u[idx];
+            }
+            else{
+                Dux = u[idx-1]+u[idx+1]-2*u[idx];
+                Duy = u[point[i+1][jp].idx]+u[point[i-1][jm].idx]-2*u[idx];
+            }
+        }
+        laplace_u = Dux + Duy;
+        return laplace_u;
+    }
     void apply_initial_condition(){
         int idx = 0;
         for(int i = 0; i <= 4*n-2 ; i++){
@@ -311,7 +419,7 @@ public:
             for(int i = 0; i <= 4*n-2; i++){
                 int J = j_num[i];
                 for(int j = 0; j <= J-1; j++){
-                    u_h[idx] = mu*(laplace(u, t, i, j, idx, g) + source(t) * delta(i, j, i_0, j_0))  + u[idx];
+                    u_h[idx] = mu*(laplace_1(u, t, i, j, idx, g) + source(t) * delta(i, j, i_0, j_0))  + u[idx];
                     idx++;
                 }
             }
@@ -368,9 +476,9 @@ public:
             error = square_error();
         }
         else if(solver == "backward_euler"){
-            double tolerance = 1e-7;
-            int max_iter = 1e3;
-            int m = 5;
+            double tolerance = 1e-8;
+            int max_iter = 1e5;
+            int m = 10;
             backward_euler(tolerance, max_iter, m);
             error = square_error();
         }
@@ -378,7 +486,7 @@ public:
             cout << "Choose again."<< endl;
             return ;
         }
-        cout << "solver : " << solver << ", dt : " << dt << " , h : " << h << " , error : " <<error <<endl;
+        cout << "solver : FVM, " << solver << ", dt : " << dt << " , h : " << h << " , error : " <<error <<endl;
         return ;
     }
 
@@ -552,7 +660,7 @@ public:
         for(int i = 0; i <= 4*n-2; i++){
             int J = j_num[i];
             for(int j = 0; j <= J-1; j++){
-                Ax[idx] = x[idx] - mu*laplace(x, t, i, j, idx, g);
+                Ax[idx] = x[idx] - mu*laplace_1(x, t, i, j, idx, g);
                 idx++;
             }
         }
@@ -573,11 +681,11 @@ public:
 int main(){
     double x_0 = 0.985;
     double y_0 = 0.211;
-    double t_end = 1.0;
-    for(int k = 0; k <= 7; k++){
-        double h = 1.0 / pow(2,k) ;
-        double dt = h;
-        string solver = "backward_euler";
+    double t_end = 0.1;
+    for(int k = 0; k <= 4; k++){
+        double h = 0.1 / pow(2,k) ;
+        double dt = 0.25*h* h;
+        string solver = "forward_euler";
         heat_equation_solver u_h_solver(h, x_0, y_0, dt, t_end);
         u_h_solver.solve(solver);
     }

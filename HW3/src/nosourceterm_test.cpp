@@ -367,9 +367,9 @@ public:
             error = square_error();
         }
         else if(solver == "backward_euler"){
-            double tolerance = 1e-7;
-            int max_iter = 1e3;
-            int m = 5;
+            double tolerance = 1e-8;
+            int max_iter = 1e5;
+            int m = 10;
             backward_euler(tolerance, max_iter, m);
             error = square_error();
         }
@@ -572,9 +572,9 @@ public:
 int main(){
     double x_0 = 0.985;
     double y_0 = 0.211;
-    double t_end = 1.0;
-    for(int k = 0; k <= 7; k++){
-        double h = 1.0 / pow(2,k) ;
+    double t_end = 0.1;
+    for(int k = 0; k <= 3; k++){
+        double h = 0.1 / pow(2,k) ;
         double dt = h*h;
         string solver = "backward_euler";
         heat_equation_solver u_h_solver(h, x_0, y_0, dt, t_end);

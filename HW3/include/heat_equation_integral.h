@@ -29,6 +29,7 @@ public:
         auto integrand = [&](double s) -> double {
             return source(s) * heat_kernel(x, y, t - s);
         };
+        if(t < 1e-6) return 0.0;
         return SimpsonIntegral::integrate1d(integrand, 0.0, t, n_intervals);
     }
     

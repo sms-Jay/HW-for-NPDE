@@ -46,7 +46,7 @@ public:
         h_sq = h * h;
         n = int (1.0 / h);
         mu = dt / h_sq;
-        sigma = 0.9*h;
+        sigma = h*0.9;
         // initialize
         j_num.resize(4*n+1, 0);
         j_num[0] = 2*n;
@@ -269,7 +269,7 @@ public:
             error = square_error();
         }
         else if(solver == "backward_euler"){
-            double tolerance = 1e-7;
+            double tolerance = 1e-8;
             int max_iter = 1e5;
             int m = 10;
             backward_euler(tolerance, max_iter, m);
@@ -279,7 +279,7 @@ public:
             cout << "Choose again."<< endl;
             return ;
         }
-        cout << "solver : " << solver << ", dt : " << dt << " , h : " << h << " , error : " <<error <<endl;
+        cout << "solver : FDM, " << solver << ", dt : " << dt << " , h : " << h << " , error : " <<error <<endl;
         return ;
     }
     vector<double> rhs(const vector<double>& u, const double t, const vector<vector<double>>& g){
@@ -499,10 +499,10 @@ public:
 int main(){
     double x_0 = 0.985;
     double y_0 = 0.211;
-    double t_end = 1.0;
-    for(int k = 0; k <= 7; k++){
-        double h = 1.0 / pow(2,k) ;
-        double dt = 0.25*h*h;
+    double t_end = 0.1;
+    for(int k = 0; k <= 5; k++){
+        double h = 0.1 / pow(2,k) ;
+        double dt = h*h;
         string solver = "backward_euler";
         heat_equation_solver u_h_solver(h, x_0, y_0, dt, t_end);
         u_h_solver.solve(solver);

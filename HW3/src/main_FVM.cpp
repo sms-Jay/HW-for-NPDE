@@ -90,7 +90,7 @@ public:
                     point[i][j].jm = j;
                 }
                 else{
-                    point[i][j].x = x + y - 1;
+                    point[i][j].x = x + y - 1 + 0.5*h;
                     point[i][j].y = y;
                     point[i][j].jp = j - 1;
                     point[i][j].jm = j + 1;
@@ -286,6 +286,7 @@ public:
         laplace_u = Dux + Duy;
         return laplace_u;
     }
+    
     void apply_initial_condition(){
         int idx = 0;
         for(int i = 0; i <= 4*n-2 ; i++){
@@ -303,7 +304,7 @@ public:
         int i_0 = position.first;
         int j_0 = position.second;
         int M = int(t_end / dt);
-        for(int k = 1; k <= M; k++){
+        for(int k = 0; k <= M-1; k++){
             double t = dt * k;
             auto u = u_h;
             int idx = 0;
@@ -321,7 +322,7 @@ public:
         return ;
     }
     bool is_stable(string solver){
-        if(solver == "forward_euler" && mu >= 0.25){
+        if(solver == "forward_euler" && mu > 0.25){
             return false;
         }
         else return true;
@@ -368,9 +369,9 @@ public:
             error = square_error();
         }
         else if(solver == "backward_euler"){
-            double tolerance = 1e-7;
-            int max_iter = 1e3;
-            int m = 5;
+            double tolerance = 1e-8;
+            int max_iter = 1e5;
+            int m = 10;
             backward_euler(tolerance, max_iter, m);
             error = square_error();
         }
@@ -378,7 +379,7 @@ public:
             cout << "Choose again."<< endl;
             return ;
         }
-        cout << "solver : " << solver << ", dt : " << dt << " , h : " << h << " , error : " <<error <<endl;
+        cout << "solver : FVM, " << solver << ", dt : " << dt << " , h : " << h << " , error : " <<error <<endl;
         return ;
     }
 
@@ -552,7 +553,7 @@ public:
         for(int i = 0; i <= 4*n-2; i++){
             int J = j_num[i];
             for(int j = 0; j <= J-1; j++){
-                Ax[idx] = x[idx] - mu*laplace(x, t, i, j, idx, g);
+                Ax[idx] = x[idx] - mu * laplace(x, t, i, j, idx, g);
                 idx++;
             }
         }
@@ -573,9 +574,9 @@ public:
 int main(){
     double x_0 = 0.985;
     double y_0 = 0.211;
-    double t_end = 1.0;
-    for(int k = 0; k <= 7; k++){
-        double h = 1.0 / pow(2,k) ;
+    double t_end = 0.1;
+    for(int k = 0; k <= 4; k++){
+        double h = 0.1 / pow(2,k) ;
         double dt = 0.1*h*h;
         string solver = "forward_euler";
         heat_equation_solver u_h_solver(h, x_0, y_0, dt, t_end);

@@ -1,14 +1,23 @@
-初值为sin(x)+sin(y):
-solver : backward_euler, dt : 1 , h : 1 , error : 0.267474
-solver : backward_euler, dt : 0.25 , h : 0.5 , error : 0.0926132
-solver : backward_euler, dt : 0.0625 , h : 0.25 , error : 0.0380348
-solver : backward_euler, dt : 0.015625 , h : 0.125 , error : 0.0244478
-solver : backward_euler, dt : 0.00390625 , h : 0.0625 , error : 0.0128886
+solver : FVM, backward_euler, dt : 0.1 , h : 0.1 , error : 0.00324028
+solver : FVM, backward_euler, dt : 0.05 , h : 0.05 , error : 0.00150595
+solver : FVM, backward_euler, dt : 0.025 , h : 0.025 , error : 0.000736822
+solver : FVM, backward_euler, dt : 0.0125 , h : 0.0125 , error : 0.000538728
+solver : FVM, backward_euler, dt : 0.00625 , h : 0.00625 , error : 0.000316526
 
-solver : forward_euler, dt : 0.2 , h : 1 , error : 0.199468
-solver : forward_euler, dt : 0.05 , h : 0.5 , error : 0.0957478
-solver : forward_euler, dt : 0.0125 , h : 0.25 , error : 0.0356629
-solver : forward_euler, dt : 0.003125 , h : 0.125 , error : 0.0221832
-solver : forward_euler, dt : 0.00078125 , h : 0.0625 , error : 0.0111054
+solver : FVM, backward_euler, dt : 0.1 , h : 0.1 , error : 0.00328192
+solver : FVM, backward_euler, dt : 0.05 , h : 0.05 , error : 0.00152225
+solver : FVM, backward_euler, dt : 0.025 , h : 0.025 , error : 0.000743857
+solver : FVM, backward_euler, dt : 0.0125 , h : 0.0125 , error : 0.00054031
+solver : FVM, backward_euler, dt : 0.00625 , h : 0.00625 , error : 0.000317099
 
-初值为0：
+solver : FDM, forward_euler, dt : 0.0025 , h : 0.1 , error : 0.00254711
+solver : FDM, forward_euler, dt : 0.000625 , h : 0.05 , error : 0.000821508
+solver : FDM, forward_euler, dt : 0.00015625 , h : 0.025 , error : 0.000309573
+solver : FDM, forward_euler, dt : 3.90625e-05 , h : 0.0125 , error : 4.3553e-05
+solver : FDM, forward_euler, dt : 9.76563e-06 , h : 0.00625 , error : 0.000111633
+
+solver : FDM, backward_euler, dt : 0.01 , h : 0.1 , error : 0.00279557
+solver : FDM, backward_euler, dt : 0.0025 , h : 0.05 , error : 0.000881676
+solver : FDM, backward_euler, dt : 0.000625 , h : 0.025 , error : 0.000321809
+solver : FDM, backward_euler, dt : 0.00015625 , h : 0.0125 , error : 4.70035e-05
+solver : FDM, backward_euler, dt : 3.90625e-05 , h : 0.00625 , error : 0.000111353
