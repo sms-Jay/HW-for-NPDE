@@ -1,0 +1,7 @@
+函数用途：
+\include
+\\simpson_integral.h:自适应Simpson积分
+\\heat_equation_integral.h:计算热方程真实解
+\src
+\main_FDM,main_FVM:主函数，包括前向、后向的有限差分、有限体积求解器，手动设置点热源、边界条件、源函数\rho(t)、初值条件、dt、h、solver,运行得到结果
+\fvm,fdm:测试函数,可以调整初值等便于调试
