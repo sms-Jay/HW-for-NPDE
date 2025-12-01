@@ -25,12 +25,12 @@ public:
     // 计算源项时间积分
     double compute_source_time_integral(double x, double y, double t,
                                        std::function<double(double)> source,
-                                       int n_intervals = 1000) const {
+                                       int n_intervals = 10000) const {
         auto integrand = [&](double s) -> double {
             return source(s) * heat_kernel(x, y, t - s);
         };
-        if(t < 1e-6) return 0.0;
-        return SimpsonIntegral::integrate1d(integrand, 0.0, t, n_intervals);
+        if(t < 1e-10) return 0.0;
+        return SimpsonIntegral::integrate_adaptive(integrand, 0.0, t, 1e-12, 20);
     }
     
     // 计算初值空间卷积

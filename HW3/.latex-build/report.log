@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.9.23)  27 NOV 2025 20:35
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.9.23)  1 DEC 2025 22:31
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -622,35 +622,45 @@ File: Grid.jpg Graphic file (type bmp)
 ]
 
 [2]
-File: FDM-forward-Euler.png Graphic file (type bmp)
-<FDM-forward-Euler.png>
-File: FDM-backward-Euler.png Graphic file (type bmp)
-<FDM-backward-Euler.png>
-File: FVM-forward-Euler.png Graphic file (type bmp)
-<FVM-forward-Euler.png>
-File: FVM-backward-Euler.png Graphic file (type bmp)
-<FVM-backward-Euler.png>
-
 
 [3]
 
 [4]
 
 [5]
+File: FDM-forward-dt=0.25h^2.png Graphic file (type bmp)
+<FDM-forward-dt=0.25h^2.png>
+File: FDM-backward-dt=h.png Graphic file (type bmp)
+<FDM-backward-dt=h.png>
+File: FVM-forward-dt=0.20h^2.png Graphic file (type bmp)
+<FVM-forward-dt=0.20h^2.png>
+File: FVM-backward-dt=h.png Graphic file (type bmp)
+<FVM-backward-dt=h.png>
+File: FDM-backward-dt=h^2.png Graphic file (type bmp)
+<FDM-backward-dt=h^2.png>
+File: FVM-backward-dt=h^2.png Graphic file (type bmp)
+<FVM-backward-dt=h^2.png>
 
-[6] (.latex-build/report.aux)
+
+[6]
+
+[7]
+
+[8]
+
+[9] (.latex-build/report.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2022/07/14>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 17383 strings out of 473832
- 365077 string characters out of 5729486
- 794525 words of memory out of 5000000
- 40199 multiletter control sequences out of 15000+600000
- 567336 words of font info for 101 fonts, out of 8000000 for 9000
+ 17449 strings out of 473832
+ 367629 string characters out of 5729486
+ 802525 words of memory out of 5000000
+ 40257 multiletter control sequences out of 15000+600000
+ 569067 words of font info for 113 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 93i,15n,111p,439b,583s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 93i,15n,111p,439b,623s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on .latex-build/report.pdf (6 pages).
+Output written on .latex-build/report.pdf (9 pages).

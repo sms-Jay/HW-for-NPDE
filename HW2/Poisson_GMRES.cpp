@@ -6,7 +6,6 @@
 #include <cmath>
 using namespace std;
 
-#define M_PI
 class Poisson_GMRES{
     private:
         double h;
@@ -512,23 +511,29 @@ class Poisson_GMRES{
             double epsilon = 1e-8;
             int max_iter = 1e5;
             vector<double> x0(N,0.0);
+            /*
             for(int k = 1;k <= 100;k++){
                 x0 = GS(x0);
             }
+            */
             GMRES(x0,epsilon,max_iter);
         }
         void print(){
             int idx = 0;
             double error = 0.0;
+            double error_2 = 0.0;
             for(int i = 0;i <= 4*n ;i++){
                 for(int j = 0;j <= j_num[i];j++){
                     // cout<<u[idx]<<" ";
                     error = max(error,fabs(u[idx]-solu[idx]));
+                    error_2 += (u[idx]-solu[idx])*(u[idx]-solu[idx]);
                     idx++;
                 }
                 // cout<<endl;
             }
+            error_2 = h * sqrt(error_2);
             cout<<"When h = "<<h<<" , Maxmimum Error : "<<error<<endl;
+            cout<<"When h = "<<h<<" , L2 Error : "<<error_2<<endl;
         }
 };
 int main(){

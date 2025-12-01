@@ -464,10 +464,10 @@ public:
                 }
                 else if(type == "in_boundary"){
 
-                        double u_1 = x[idx-1];
-                        double u_2 = x[idx];
-                        Ax[idx] = (2.0*u_2 + u_1)/3.0;
-                    
+                    double u_1 = x[idx-1];
+                    double u_2 = x[idx];
+                    Ax[idx] = (2.0*u_2 + u_1)/3.0;
+                    //Ax[idx] = x[idx];
                     
                     
                 }
@@ -495,10 +495,10 @@ int main(){
     double x_0 = 0.985;
     double y_0 = 0.211;
     double t_end = 0.1;
-    for(int k = 0; k <= 4; k++){
+    for(int k = 0; k <= 5; k++){
         double h = 0.1 / pow(2,k) ;
-        double dt = 0.25*h*h;
-        string solver = "forward_euler";
+        double dt = h;
+        string solver = "backward_euler";
         heat_equation_solver u_h_solver(h, x_0, y_0, dt, t_end);
         u_h_solver.solve(solver);
     }

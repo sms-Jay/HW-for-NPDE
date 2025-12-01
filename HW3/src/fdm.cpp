@@ -296,6 +296,7 @@ public:
                     double u_1 = real_solution(t, point[i][j-1].x, point[i][j-1].y);
                     double u_2 = g[i][j];
                     b[idx] = (2.0*u_2 + u_1)/3.0;
+                    b[idx] = u[idx] + dt * source(t) * regularized_delta(point[i][j].x, point[i][j].y) + mu*(8.0/3.0)*g[i][j];
                 }
                 else{
                     b[idx] = g[i][j];
@@ -472,7 +473,9 @@ public:
                         double u_1 = x[idx-1];
                         double u_2 = x[idx];
                         Ax[idx] = (2.0*u_2 + u_1)/3.0;
-                    
+                    int jm = point[i][j].jm;
+                    int jp = point[i][j].jp;
+                    Ax[idx] = x[idx] - mu*(x[point[i-1][jm].idx] + x[point[i+1][jp].idx] + (4.0/3.0)*x[idx-1] - 6*x[idx]);
                     
                     
                 }

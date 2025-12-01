@@ -6,8 +6,7 @@
 #include <cmath>
 using namespace std;
 // Using a non-uniform grid
-#define M_PI
-#define M_SQRT1_2
+
 class Poisson_GMRES{
     private:
         double h;

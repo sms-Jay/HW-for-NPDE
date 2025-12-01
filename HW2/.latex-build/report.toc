@@ -2,9 +2,9 @@
 \contentsline {section}{\numberline {2}算法设计}{1}{section.2}%
 \contentsline {subsection}{\numberline {2.1}网格离散}{1}{subsection.2.1}%
 \contentsline {subsection}{\numberline {2.2}算子离散及边界条件处理}{3}{subsection.2.2}%
-\contentsline {subsection}{\numberline {2.3}数值算法}{3}{subsection.2.3}%
-\contentsline {section}{\numberline {3}数值结果}{3}{section.3}%
-\contentsline {subsection}{\numberline {3.1}数值算例}{3}{subsection.3.1}%
-\contentsline {subsection}{\numberline {3.2}数值实验及结果}{3}{subsection.3.2}%
+\contentsline {subsection}{\numberline {2.3}数值算法}{4}{subsection.2.3}%
+\contentsline {section}{\numberline {3}数值结果}{4}{section.3}%
+\contentsline {subsection}{\numberline {3.1}数值算例}{4}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}数值实验及结果}{4}{subsection.3.2}%
 \contentsline {subsection}{\numberline {3.3}简要分析}{4}{subsection.3.3}%
-\contentsline {section}{\numberline {4}后续改进}{4}{section.4}%
+\contentsline {section}{\numberline {4}后续改进}{5}{section.4}%

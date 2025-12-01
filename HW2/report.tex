@@ -35,10 +35,33 @@
 所有点可分为三类：内点，边界点及临边界点，角点。
 \subsection{算子离散及边界条件处理}
 对于不同点进行不同格式离散：
-\\ 对于内点，采取五点差分格式离散Laplace算子。
-\\ 对于边界点，采取前向或者后向差商格式离散梯度，进而离散方向导数。
-\\ 对于临边界点，即该点$(x,y)$非内点且不位于边界，则在边界上最近点为$(x^*,y^*)$，以点$(x,y)$的差商近似$(x^*,y^*)$的梯度，进而离散方向导数。
-\\ 对于角点，赋予Dirichlet边界条件，即规定角点处取值为真实解。
+\\ 对于内点，采取五点差分格式离散Laplace算子。即\begin{equation}
+    AU_{i,j}=\frac{-U_{i+1,j}-U_{i-1,j}-U_{i,j+1}-U_{i,j-1}+4U_{i,j}}{h^2}=b_{i,j}=f(x_i,y_j)
+\end{equation}
+\\ 对于边界点，采取前向或者后向差商格式离散梯度，进而离散方向导数。具体而言，就是把边界上的点也纳入数值解，边界条件也视为线性算子在数值解向量上的作用。
+以下边界上的点为例，通过数值离散，得到\begin{align}
+g(x_i,y_j)&=\alpha u(x_i,y_j)+\beta \frac{\partial u}{\partial \vec{n}}(x_i,y_j)\\
+&\approx \alpha U_{i,j}+\beta \frac{U_{i,j}-U_{i+1,j}}{h}
+\end{align}
+这就是此边界点所对应的线性方程，可以认为是矩阵-向量乘法的形式，用于GMRES的矩阵-向量乘法更新：\begin{equation}
+    AU_{i,j}=\alpha U_{i,j}+\beta \frac{U_{i,j}-U_{i+1,j}}{h}=b_{i,j}=g(x_i,y_j)
+\end{equation}
+\\ 对于临边界点，即该点$(x,y)$非内点且不位于边界，则在边界上最近点为$(x_i^*,y_j^*)$，以点$(x,y)$的差商近似$(x_i^*,y_j^*)$的梯度，进而离散方向导数。具体和边界点类似，
+以右边界$y=2x-1(1\leq x \leq 2)$附近的临边界点为例，$(x_i^*,y_j^*)=(x+0.4h,y-0.2h)$，通过数值离散和近似，得到\begin{align}
+g(x_i^*,y_j^*)&=\alpha u(x^*,y^*)+\beta \frac{\partial u}{\partial \vec{n}}(x^*,y^*)\\
+&\approx \alpha u(x_i,y_j)+\beta \frac{\partial u}{\partial \vec{n}}(x_i,y_j)\\
+&\approx \alpha U_{i,j} + \beta (\frac{U_{i,j}-U_{i-1,j}}{h} , \frac{U_{i+1,j}-U_{i,j}}{h})\cdot (2/ \sqrt{5},-1/ \sqrt{5})
+\end{align}
+这就是此边界点所对应的线性方程，可以认为是矩阵-向量乘法的形式，用于GMRES的矩阵-向量乘法更新：\begin{equation}
+    AU_{i,j}=\alpha U_{i,j}+\beta (\frac{U_{i,j}-U_{i-1,j}}{h} , \frac{U_{i+1,j}-U_{i,j}}{h})\cdot (2/ \sqrt{5},-1/ \sqrt{5})=b_{i,j}=g(x_i^*,y_j^*)
+\end{equation}
+\\ 对于角点，赋予Dirichlet边界条件，即规定角点处取值为真实解。\begin{equation}
+    AU_{i,j}=b_{i,j}=u(x_i,y_j)
+\end{equation}这样做的原因是为了保持Neumann边界条件解的唯一性，从求解线性方程组的角度上讲，是为了保持矩阵可逆。
+同时由于在角点，并没有良定义的法向导数，所以无法使用Nuemann或Robin边界条件设置离散的线性方程。如果在角点并未给出所谓真实解，也可以直接选择其他方式，
+如固定某内点的值为确定值，或者取在区域上积分为0为补充的线性方程，我们这种方式只是一种示例。
+\\ 这样，我们在离散后的网格上的每个点都通过数值离散得到了一个线性方程，组合在一起的整体就是一个关于矩阵向量的线性方程组。
+注意到此方程组的构造形式基本适用于所有边界条件，所以我们可以进行统一求解，只需要根据问题设定$\alpha,\beta$即可。
 \subsection{数值算法}
 此线性方程组较为复杂，我们采取GMRES(m)迭代法进行求解。为了保证收敛性，先进行Gauss-Seidel迭代约100步，找到较为理想的初值，随后进行GMRES求解。
 \section{数值结果}
